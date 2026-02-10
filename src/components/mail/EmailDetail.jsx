@@ -3,7 +3,7 @@ import { ArrowLeft, Reply, Forward, Trash2, MoreHorizontal } from 'lucide-react'
 import { formatDate } from '../../utils/dateUtils';
 import './EmailDetail.css';
 
-export default function EmailDetail({ email, onBack, onReply }) {
+export default function EmailDetail({ email, onBack, onReply, onDelete }) {
     if (!email) return null;
 
     const senderName = email.from_address?.name || email.from_address?.email || 'Unknown';
@@ -27,7 +27,7 @@ export default function EmailDetail({ email, onBack, onReply }) {
                         <Forward size={18} />
                         <span>Forward</span>
                     </button>
-                    <button className="action-button danger">
+                    <button className="action-button danger" onClick={() => onDelete(email.id)}>
                         <Trash2 size={18} />
                     </button>
                 </div>

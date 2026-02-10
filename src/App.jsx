@@ -158,6 +158,15 @@ function App() {
     setCurrentView(lastListView || 'inbox');
   };
 
+  const handleDeleteCurrent = async (id) => {
+    // If id is not provided, use currentEmail.id
+    const targetId = id || currentEmail?.id;
+    if (targetId) {
+      await deleteEmail(targetId);
+      handleBack(); // Navigate back to list after delete
+    }
+  };
+
   if (!isAuthenticated) {
     return <LoginPage />;
   }
@@ -208,13 +217,14 @@ function App() {
                 thread={currentThread}
                 onBack={handleBack}
                 onReply={handleReply}
-                onDelete={deleteEmail}
+                onDelete={handleDeleteCurrent}
               />
             ) : (
               <EmailDetail
                 email={currentEmail}
                 onBack={handleBack}
                 onReply={handleReply}
+                onDelete={handleDeleteCurrent}
               />
             )
           )
