@@ -159,7 +159,6 @@
     background-color: var(--color-surface-hover);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
-    cursor: pointer;
     transition: all var(--transition-fast);
     text-align: left;
 }
