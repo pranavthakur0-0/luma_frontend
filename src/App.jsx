@@ -90,9 +90,9 @@ function App() {
       const token = localStorage.getItem('token');
       connectSSE(token, {
         onNewEmail: (data) => {
-          // Refresh inbox if open
-          if (currentView === 'inbox') {
-            fetchInbox();
+          // Silently prepend new emails without loading state
+          if (data.emails?.length > 0) {
+            useMailStore.getState().prependEmails(data.emails);
           }
         },
         onSyncRequired: () => {

@@ -24,6 +24,32 @@ export default function EmailItem({ email, isSelected, onClick, onDelete, onMark
                     <span className={`email-item-sender ${!email.is_read ? 'unread' : ''}`}>
                         {senderName}
                     </span>
+                    <div className="email-item-actions">
+                        {!email.is_read && (
+                            <button
+                                className="email-item-action mark-read"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onMarkRequest?.(email.id);
+                                }}
+                                aria-label="Mark as read"
+                                title="Mark as read"
+                            >
+                                <MailOpen size={16} />
+                            </button>
+                        )}
+                        <button
+                            className="email-item-action delete"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete?.(email.id);
+                            }}
+                            aria-label="Delete"
+                            title="Delete"
+                        >
+                            <Trash2 size={16} />
+                        </button>
+                    </div>
                     <span className={`email-item-date ${!email.is_read ? 'unread' : ''}`}>
                         {formatDistanceToNow(email.date)}
                     </span>
@@ -36,33 +62,6 @@ export default function EmailItem({ email, isSelected, onClick, onDelete, onMark
                 </div>
 
                 <p className="email-item-preview">{email.snippet}</p>
-            </div>
-
-            <div className="email-item-actions">
-                {!email.is_read && (
-                    <button
-                        className="email-item-action mark-read"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onMarkRequest?.(email.id);
-                        }}
-                        aria-label="Mark as read"
-                        title="Mark as read"
-                    >
-                        <MailOpen size={16} />
-                    </button>
-                )}
-                <button
-                    className="email-item-action delete"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete?.(email.id);
-                    }}
-                    aria-label="Delete"
-                    title="Delete"
-                >
-                    <Trash2 size={16} />
-                </button>
             </div>
         </div>
     );

@@ -70,6 +70,17 @@ export const useMailStore = create((set, get) => ({
         filters: { fromAddress: null, afterDate: null, beforeDate: null, isUnread: null, query: null }
     }),
 
+    // Silently prepend new emails from SSE (no loading state)
+    prependEmails: (newEmails) => set((state) => {
+        const existingIds = new Set(state.inbox.map(e => e.id));
+        const uniqueNew = newEmails.filter(e => !existingIds.has(e.id));
+        if (uniqueNew.length === 0) return state;
+        return {
+            inbox: [...uniqueNew, ...state.inbox],
+            totalEmails: state.totalEmails + uniqueNew.length,
+        };
+    }),
+
     // Pagination
     nextPageToken: null,
     pageTokens: [], // Stack of page tokens for back navigation
