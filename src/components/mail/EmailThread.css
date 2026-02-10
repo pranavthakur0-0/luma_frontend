@@ -114,3 +114,9 @@
     color: var(--text-primary);
     border-color: var(--border-hover);
 }
+
+.email-thread-actions{
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}

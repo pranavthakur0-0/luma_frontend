@@ -49,11 +49,42 @@ export default function EmailDetail({ email, onBack, onReply }) {
                     </div>
                 </div>
 
-                <div className="email-to">
-                    <span className="label">To:</span>
-                    <span className="recipients">
-                        {email.to_addresses?.map(addr => addr.email).join(', ') || 'me'}
-                    </span>
+                <div className="email-meta-details">
+                    <div className="meta-row">
+                        <span className="meta-label">To:</span>
+                        <span className="meta-value">
+                            {email.to_addresses?.map(addr => addr.name || addr.email).join(', ') || 'me'}
+                        </span>
+                    </div>
+                    {email.cc_addresses?.length > 0 && (
+                        <div className="meta-row">
+                            <span className="meta-label">Cc:</span>
+                            <span className="meta-value">
+                                {email.cc_addresses.map(addr => addr.name || addr.email).join(', ')}
+                            </span>
+                        </div>
+                    )}
+                    {email.bcc_addresses?.length > 0 && (
+                        <div className="meta-row">
+                            <span className="meta-label">Bcc:</span>
+                            <span className="meta-value">
+                                {email.bcc_addresses.map(addr => addr.name || addr.email).join(', ')}
+                            </span>
+                        </div>
+                    )}
+                    <div className="meta-row">
+                        <span className="meta-label">Date:</span>
+                        <span className="meta-value">
+                            {new Date(email.date).toLocaleString(undefined, {
+                                weekday: 'short',
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}
+                        </span>
+                    </div>
                 </div>
 
                 <div className="email-body">
