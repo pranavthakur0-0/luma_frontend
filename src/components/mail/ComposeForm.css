@@ -1,0 +1,214 @@
+/**
+ * ComposeForm Styles - Vercel-inspired
+ */
+
+.compose-form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: var(--color-background);
+}
+
+/* Header */
+.compose-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.compose-header h2 {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.cc-bcc-toggle {
+    background: none;
+    border: none;
+    color: var(--color-text-tertiary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.cc-bcc-toggle:hover {
+    background-color: var(--color-surface-hover);
+    color: var(--color-text-primary);
+}
+
+.close-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.close-button:hover {
+    background-color: var(--color-surface-hover);
+    color: var(--color-text-primary);
+}
+
+/* Form */
+.compose-form form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Fields */
+.compose-field {
+    display: flex;
+    align-items: center;
+    padding: 0 var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.compose-field label {
+    width: 60px;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+    flex-shrink: 0;
+}
+
+.compose-field input {
+    flex: 1;
+    padding: var(--space-4) 0;
+    border: none;
+    border-bottom: 0.5px solid var(--color-border);
+    border-radius: 0;
+    background-color: transparent;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    outline: none !important;
+    box-shadow: none !important;
+    transition: border-color var(--transition-fast);
+}
+
+.compose-field input:focus {
+    border-bottom-color: var(--color-text-primary);
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.compose-field input::placeholder {
+    color: var(--color-text-tertiary);
+}
+
+.compose-field input.ai-filled {
+    animation: highlight 0.5s ease;
+}
+
+@keyframes highlight {
+    0% {
+        background-color: var(--color-accent-light);
+    }
+
+    100% {
+        background-color: transparent;
+    }
+}
+
+/* Body */
+.compose-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+.compose-body textarea {
+    flex: 1;
+    padding: var(--space-4) var(--space-6);
+    border: none;
+    background-color: transparent;
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+    resize: none;
+    outline: none;
+}
+
+.compose-body textarea::placeholder {
+    color: var(--color-text-tertiary);
+}
+
+.compose-body textarea.ai-filled {
+    animation: highlight 0.5s ease;
+}
+
+/* Footer */
+.compose-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) var(--space-6);
+    border-top: 1px solid var(--color-border);
+}
+
+.compose-actions-left {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.attach-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.attach-button:hover {
+    background-color: var(--color-surface-hover);
+    color: var(--color-text-primary);
+}
+
+.send-button {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    border: none;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-text-primary);
+    color: var(--color-text-inverted);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.send-button:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.send-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
