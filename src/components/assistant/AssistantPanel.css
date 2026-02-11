@@ -86,6 +86,27 @@
     color: var(--color-text-primary);
 }
 
+.history-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    padding: 0;
+    margin-right: 4px;
+}
+
+.history-toggle-btn:hover {
+    background-color: var(--color-surface-hover);
+    color: var(--color-text-primary);
+}
+
 .close-btn {
     display: flex;
     align-items: center;

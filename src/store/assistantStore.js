@@ -5,6 +5,8 @@ import { useMailStore } from './mailStore';
 export const useAssistantStore = create((set, get) => ({
     // Chat state
     messages: [],
+    conversations: [],
+    currentConversationId: null,
     isProcessing: false,
     isPanelOpen: true,
     panelWidth: 380, // Default width
@@ -14,6 +16,51 @@ export const useAssistantStore = create((set, get) => ({
 
     // Actions
     togglePanel: () => set((state) => ({ isPanelOpen: !state.isPanelOpen })),
+
+    // Conversation Management
+    loadConversations: async () => {
+        try {
+            const res = await assistantApi.getConversations();
+            set({ conversations: res.data });
+        } catch (error) {
+            console.error('Failed to load conversations:', error);
+        }
+    },
+
+    loadConversation: async (id) => {
+        try {
+            set({ isProcessing: true });
+            const res = await assistantApi.getConversation(id);
+            set({
+                messages: res.data.messages,
+                currentConversationId: id,
+                isProcessing: false
+            });
+        } catch (error) {
+            console.error('Failed to load conversation:', error);
+            set({ isProcessing: false });
+        }
+    },
+
+    startNewConversation: () => {
+        set({
+            messages: [],
+            currentConversationId: null
+        });
+    },
+
+    deleteConversation: async (id) => {
+        try {
+            await assistantApi.deleteConversation(id);
+            set((state) => ({
+                conversations: state.conversations.filter(c => c._id !== id),
+                messages: state.currentConversationId === id ? [] : state.messages,
+                currentConversationId: state.currentConversationId === id ? null : state.currentConversationId
+            }));
+        } catch (error) {
+            console.error('Failed to delete conversation:', error);
+        }
+    },
 
     setPanelWidth: (width) => set({ panelWidth: width }),
 
@@ -92,7 +139,7 @@ export const useAssistantStore = create((set, get) => ({
             }));
 
             // Call streaming API
-            const response = await assistantApi.chatStream(message, context, history);
+            const response = await assistantApi.chatStream(message, context, history, get().currentConversationId);
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
 
@@ -115,6 +162,12 @@ export const useAssistantStore = create((set, get) => ({
                             get().updateMessage(aiMessageId, { content: accumulatedContent });
                         } else if (data.type === 'tool_calls') {
                             toolCalls = data.tool_calls;
+                        } else if (data.type === 'meta') {
+                            // Update conversation ID if newly created
+                            if (data.conversationId && data.conversationId !== get().currentConversationId) {
+                                set({ currentConversationId: data.conversationId });
+                                get().loadConversations(); // Refresh list to show new title/convo
+                            }
                         } else if (data.type === 'error') {
                             get().updateMessage(aiMessageId, {
                                 content: `Error: ${data.error}`,
@@ -172,6 +225,8 @@ export const useAssistantStore = create((set, get) => ({
                 await sleep(300);
                 mailStore.setComposeDraft({
                     to: args.to || [],
+                    cc: args.cc || [],
+                    bcc: args.bcc || [],
                     subject: args.subject || '',
                     body: args.body || '',
                 });

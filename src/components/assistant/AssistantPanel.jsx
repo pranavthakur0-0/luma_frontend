@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, X, Loader2, Mic, MicOff, CheckCircle, AlertCircle, Filter, Info } from 'lucide-react';
+import { Send, Bot, User, Sparkles, X, Loader2, Mic, MicOff, CheckCircle, AlertCircle, Filter, Info, History, Menu } from 'lucide-react';
 import { useAssistantStore } from '../../store';
+import ChatHistorySidebar from './ChatHistorySidebar';
 import './AssistantPanel.css';
 
 export default function AssistantPanel() {
     const [input, setInput] = useState('');
     const [isListening, setIsListening] = useState(false);
     const [speechSupported, setSpeechSupported] = useState(false);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false); // State for history sidebar
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
     const recognitionRef = useRef(null);
@@ -129,9 +131,19 @@ export default function AssistantPanel() {
     return (
         <div className="assistant-panel-container" style={{ width: panelWidth }}>
             <div className="resize-handle" onMouseDown={handleMouseDown} />
+
+            <ChatHistorySidebar isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} />
+
             <div className="assistant-panel" style={{ width: '100%' }}>
                 <div className="assistant-header">
                     <div className="assistant-title">
+                        <button
+                            className="history-toggle-btn"
+                            onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+                            title="Toggle History"
+                        >
+                            <Menu size={20} />
+                        </button>
                         <Bot size={20} />
                         <span>AI Assistant</span>
                     </div>

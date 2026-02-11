@@ -54,15 +54,16 @@ export const mailApi = {
 
 // Assistant API
 export const assistantApi = {
-  chat: (message, context, conversationHistory = []) =>
+  chat: (message, context, conversationHistory = [], conversationId = null) =>
     api.post('/assistant/chat', {
       message,
       context,
       conversation_history: conversationHistory,
+      conversationId
     }),
 
   // Streaming chat - returns a fetch Response for SSE consumption
-  chatStream: async (message, context, conversationHistory = []) => {
+  chatStream: async (message, context, conversationHistory = [], conversationId = null) => {
     const token = localStorage.getItem('token');
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -76,11 +77,18 @@ export const assistantApi = {
         message,
         context,
         conversation_history: conversationHistory,
+        conversationId
       }),
     });
   },
 
   getTools: () => api.get('/assistant/tools'),
+
+  // Conversation Management
+  getConversations: () => api.get('/assistant/conversations'),
+  getConversation: (id) => api.get(`/assistant/conversations/${id}`),
+  deleteConversation: (id) => api.delete(`/assistant/conversations/${id}`),
+  updateConversation: (id, data) => api.patch(`/assistant/conversations/${id}`, data),
 };
 
 export default api;
