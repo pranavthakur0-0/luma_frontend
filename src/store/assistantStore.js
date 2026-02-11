@@ -273,18 +273,57 @@ export const useAssistantStore = create((set, get) => ({
                 break;
 
             case 'search_emails':
-                let query = args.query || '';
-                if (args.from_address) query += ` from:${args.from_address}`;
-                if (args.subject_contains) query += ` subject:${args.subject_contains}`;
+                let queryParts = [];
 
-                await mailStore.searchEmails(query.trim());
-                mailStore.setCurrentView('inbox');
+                // Construct Gmail search query from structured params
+                if (args.sender) queryParts.push(`from:${args.sender}`);
+                if (args.subject_keywords) queryParts.push(`subject:(${args.subject_keywords})`);
+                if (args.body_keywords) queryParts.push(`${args.body_keywords}`);
+                if (args.has_attachment) queryParts.push('has:attachment');
 
-                await addAndPersistMessage({
-                    role: 'assistant',
-                    content: `Found ${mailStore.inbox.length} emails matching your search.`,
-                    type: 'info'
-                });
+                if (args.date_range) {
+                    const today = new Date();
+                    let dateStr = '';
+
+                    switch (args.date_range) {
+                        case 'today':
+                            dateStr = new Date(today.setHours(0, 0, 0, 0)).toISOString().split('T')[0].replace(/-/g, '/');
+                            queryParts.push(`after:${dateStr}`);
+                            break;
+                        case 'yesterday':
+                            const yesterday = new Date(today);
+                            yesterday.setDate(yesterday.getDate() - 1);
+                            dateStr = yesterday.toISOString().split('T')[0].replace(/-/g, '/');
+                            queryParts.push(`after:${dateStr}`);
+                            break;
+                        // Add more ranges as needed, or rely on specific date parsing
+                    }
+                }
+
+                // Fallback to raw query if provided (backward compatibility)
+                if (args.query) queryParts.push(args.query);
+
+                const finalQuery = queryParts.join(' ').trim();
+
+                if (finalQuery) {
+                    await mailStore.searchEmails(finalQuery);
+                    mailStore.setCurrentView('inbox'); // Search results are shown in inbox view usually
+
+                    // Fetch fresh state to get accurate count
+                    const resultCount = useMailStore.getState().inbox.length;
+
+                    await addAndPersistMessage({
+                        role: 'assistant',
+                        content: `I've found ${resultCount} emails matching your criteria.`,
+                        type: 'info'
+                    });
+                } else {
+                    await addAndPersistMessage({
+                        role: 'assistant',
+                        content: `I didn't understand the search criteria. Could you try asking in a different way?`,
+                        type: 'error'
+                    });
+                }
                 break;
 
             case 'filter_emails':
@@ -321,33 +360,47 @@ export const useAssistantStore = create((set, get) => ({
                         console.error("Failed to open email by ID", e);
                     }
                 } else {
-                    // Find email by description, list_position, or default to latest
+                    // Find email using structured criteria provided by LLM
                     const emails = mailStore.inbox;
                     let found = null;
 
-                    // Case 1: List Position (LLM inferred index)
+                    // Case 1: List Position
                     if (args.list_position !== undefined && args.list_position !== null) {
                         const index = args.list_position - 1; // Convert 1-based to 0-based
                         if (index >= 0 && index < emails.length) {
                             found = emails[index];
                         }
                     }
-                    // Case 2: Description search (fallback or explicit text search)
-                    else if (args.description) {
-                        const desc = args.description.toLowerCase();
+                    // Case 2: Structured Search (Sender/Subject/Latest)
+                    else {
+                        // Filter candidates based on sender and subject if provided
+                        let candidates = emails;
 
-                        if (desc.includes('latest') || desc.includes('last')) {
-                            found = emails[0];
-                        } else {
-                            found = emails.find(e =>
-                                e.from_address?.email?.toLowerCase().includes(desc) ||
-                                e.from_address?.name?.toLowerCase().includes(desc) ||
-                                e.subject?.toLowerCase().includes(desc)
+                        if (args.sender) {
+                            const senderQuery = args.sender.toLowerCase();
+                            candidates = candidates.filter(e =>
+                                (e.from_address?.email || '').toLowerCase().includes(senderQuery) ||
+                                (e.from_address?.name || '').toLowerCase().includes(senderQuery)
                             );
                         }
-                    } else {
-                        // Case 3: No args, default to first email
-                        found = emails[0];
+
+                        if (args.subject) {
+                            const subjectQuery = args.subject.toLowerCase();
+                            candidates = candidates.filter(e =>
+                                (e.subject || '').toLowerCase().includes(subjectQuery)
+                            );
+                        }
+
+                        // Select the best match
+                        if (candidates.length > 0) {
+                            if (args.is_latest) {
+                                // Already sorted by date usually, so first is latest
+                                found = candidates[0];
+                            } else {
+                                // Default to first match if no other specific logic
+                                found = candidates[0];
+                            }
+                        }
                     }
 
                     if (found) {
@@ -366,7 +419,7 @@ export const useAssistantStore = create((set, get) => ({
                 } else {
                     await addAndPersistMessage({
                         role: 'assistant',
-                        content: "I couldn't find that email. Could you be more specific?",
+                        content: "I couldn't find that email in your current view.",
                         type: 'error'
                     });
                 }

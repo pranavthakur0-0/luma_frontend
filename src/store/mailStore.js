@@ -11,6 +11,7 @@ export const useMailStore = create((set, get) => ({
     currentSearchQuery: '',
     isSearchActive: false,
     searchResultsCount: 0,
+    currentListTotal: 0, // Total matches for current view/search/filter
 
     // Current state
     currentEmail: null,
@@ -124,6 +125,7 @@ export const useMailStore = create((set, get) => ({
             set({
                 inbox: response.data.emails,
                 nextPageToken: response.data.nextPageToken,
+                currentListTotal: response.data.resultSizeEstimate || 0,
                 isLoading: false
             });
             return response.data.emails;
@@ -189,6 +191,7 @@ export const useMailStore = create((set, get) => ({
                 searchResults: response.data.emails,
                 inbox: response.data.emails,
                 searchResultsCount: response.data.emails.length,
+                currentListTotal: response.data.resultSizeEstimate || response.data.emails.length,
                 isLoading: false
             });
             return response.data.emails;
@@ -208,7 +211,11 @@ export const useMailStore = create((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             const response = await mailApi.getSent({ max_results: 50 });
-            set({ sent: response.data.emails, isLoading: false });
+            set({
+                sent: response.data.emails,
+                currentListTotal: response.data.resultSizeEstimate || 0,
+                isLoading: false
+            });
             return response.data.emails;
         } catch (error) {
             set({ error: error.message, isLoading: false });

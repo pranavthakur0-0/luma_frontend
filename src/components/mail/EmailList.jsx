@@ -31,6 +31,7 @@ export default function EmailList({
         currentSearchQuery,
         isSearchActive,
         searchResultsCount,
+        currentListTotal, // Total matches for current view
         clearSearch,
         markAsRead, // Destructure new action
     } = useMailStore();
@@ -43,10 +44,9 @@ export default function EmailList({
         setInputValue(currentSearchQuery || '');
     }, [currentSearchQuery]);
 
-    // Determine display count: use search results count if search is active, otherwise total
-    const displayCount = isSearchActive
-        ? searchResultsCount
-        : (title === 'Sent' ? totalSentEmails : totalEmails);
+    // Determine display count: prefer the specific list total (which handles filters)
+    // Fallback to total/search counts only if currentListTotal is missing
+    const displayCount = currentListTotal;
 
     // Fetch total count only on mount or title change (uses cache)
     useEffect(() => {
