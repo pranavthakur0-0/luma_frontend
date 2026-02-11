@@ -21,16 +21,12 @@ export default function ChatHistorySidebar({ isOpen, onClose }) {
 
     const handleNewChat = () => {
         startNewConversation();
-        if (window.innerWidth < 768) {
-            onClose();
-        }
+        onClose();
     };
 
     const handleSelectChat = (id) => {
         loadConversation(id);
-        if (window.innerWidth < 768) {
-            onClose();
-        }
+        onClose();
     };
 
     const handleDeleteChat = (e, id) => {
@@ -50,11 +46,6 @@ export default function ChatHistorySidebar({ isOpen, onClose }) {
                     <X size={18} />
                 </button>
             </div>
-
-            <button className="new-chat-btn" onClick={handleNewChat}>
-                <Plus size={16} />
-                <span>New Chat</span>
-            </button>
 
             <div className="conversations-list">
                 {conversations.length === 0 ? (

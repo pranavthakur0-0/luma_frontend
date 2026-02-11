@@ -89,6 +89,7 @@ export const assistantApi = {
   getConversation: (id) => api.get(`/assistant/conversations/${id}`),
   deleteConversation: (id) => api.delete(`/assistant/conversations/${id}`),
   updateConversation: (id, data) => api.patch(`/assistant/conversations/${id}`, data),
+  addMessageToConversation: (id, messageData) => api.post(`/assistant/conversations/${id}/messages`, messageData),
 };
 
 export default api;

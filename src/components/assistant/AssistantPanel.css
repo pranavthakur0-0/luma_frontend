@@ -86,7 +86,13 @@
     color: var(--color-text-primary);
 }
 
-.history-toggle-btn {
+.assistant-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.header-action-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -99,10 +105,10 @@
     cursor: pointer;
     transition: all var(--transition-fast);
     padding: 0;
-    margin-right: 4px;
 }
 
-.history-toggle-btn:hover {
+.header-action-btn:hover,
+.header-action-btn.active {
     background-color: var(--color-surface-hover);
     color: var(--color-text-primary);
 }
@@ -567,4 +573,27 @@
 .cancel-btn:hover {
     background-color: var(--color-surface-hover);
     border-color: var(--color-text-primary);
+}
+/* Tool Badge Styles */
+.tool-usage {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.tool-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    background-color: var(--color-surface-hover);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: auto;
+}
+
+.tool-badge svg {
+    opacity: 0.7;
 }

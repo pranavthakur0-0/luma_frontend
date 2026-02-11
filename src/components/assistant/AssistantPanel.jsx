@@ -24,7 +24,8 @@ export default function AssistantPanel() {
         confirmAction,
         cancelAction,
         panelWidth,
-        setPanelWidth
+        setPanelWidth,
+        startNewConversation
     } = useAssistantStore();
 
     // Initialize Speech Recognition
@@ -137,19 +138,28 @@ export default function AssistantPanel() {
             <div className="assistant-panel" style={{ width: '100%' }}>
                 <div className="assistant-header">
                     <div className="assistant-title">
-                        <button
-                            className="history-toggle-btn"
-                            onClick={() => setIsHistoryOpen(!isHistoryOpen)}
-                            title="Toggle History"
-                        >
-                            <Menu size={20} />
-                        </button>
                         <Bot size={20} />
                         <span>AI Assistant</span>
                     </div>
-                    <button className="close-btn" onClick={togglePanel}>
-                        <X size={18} />
-                    </button>
+                    <div className="assistant-actions">
+                        <button
+                            className="header-action-btn"
+                            onClick={startNewConversation}
+                            title="New Chat"
+                        >
+                            <Sparkles size={18} />
+                        </button>
+                        <button
+                            className={`header-action-btn ${isHistoryOpen ? 'active' : ''}`}
+                            onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+                            title="History"
+                        >
+                            <History size={18} />
+                        </button>
+                        <button className="close-btn" onClick={togglePanel}>
+                            <X size={18} />
+                        </button>
+                    </div>
                 </div>
 
                 <div className="assistant-messages">
@@ -175,11 +185,13 @@ export default function AssistantPanel() {
                         const isAssistant = message.role === 'assistant';
 
                         // Skip rendering empty assistant messages (placeholder for stream)
-                        if (isAssistant && !message.content && !message.type) return null;
+                        // But show if it has tool calls
+                        const hasToolCalls = message.tool_calls && message.tool_calls.length > 0;
+                        if (isAssistant && !message.content && !message.type && !hasToolCalls) return null;
 
                         return (
                             <div
-                                key={message.id}
+                                key={message.id || index}
                                 className={`message ${message.role} ${message.type || ''}`}
                             >
                                 <div className="message-avatar">
@@ -190,6 +202,18 @@ export default function AssistantPanel() {
                                     {message.type === 'error' && <AlertCircle size={16} className="icon error" />}
                                     {message.type === 'filter' && <Filter size={16} className="icon info" />}
                                     {message.type === 'info' && <Info size={16} className="icon info" />}
+
+                                    {/* Render Tool Calls */}
+                                    {hasToolCalls && (
+                                        <div className="tool-usage">
+                                            {message.tool_calls.map((tool, i) => (
+                                                <div key={i} className="tool-badge">
+                                                    <Sparkles size={12} />
+                                                    <span>Used tool: {tool.name.replace(/_/g, ' ')}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
 
                                     {message.content}
 

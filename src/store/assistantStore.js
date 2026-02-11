@@ -31,8 +31,15 @@ export const useAssistantStore = create((set, get) => ({
         try {
             set({ isProcessing: true });
             const res = await assistantApi.getConversation(id);
+
+            // Ensure messages have IDs
+            const messagesWithIds = res.data.messages.map((m, i) => ({
+                ...m,
+                id: m.id || `msg-${res.data._id}-${i}-${Date.now()}`
+            }));
+
             set({
-                messages: res.data.messages,
+                messages: messagesWithIds,
                 currentConversationId: id,
                 isProcessing: false
             });
@@ -216,6 +223,21 @@ export const useAssistantStore = create((set, get) => ({
 
         console.log('Executing tool:', name, args);
 
+        const addAndPersistMessage = async (message) => {
+            // 1. Add to local state
+            get().addMessage(message);
+
+            // 2. Persist to backend if we have a conversation
+            const conversationId = get().currentConversationId;
+            if (conversationId) {
+                try {
+                    await assistantApi.addMessageToConversation(conversationId, message);
+                } catch (error) {
+                    console.error('Failed to persist tool message:', error);
+                }
+            }
+        };
+
         switch (name) {
             case 'compose_email':
                 // Navigate to compose and fill form
@@ -233,7 +255,7 @@ export const useAssistantStore = create((set, get) => ({
 
                 get().setPendingAction({ type: 'send_email' });
 
-                get().addMessage({
+                await addAndPersistMessage({
                     role: 'assistant',
                     content: `I've filled in the compose form. Please review it. If everything looks good, click on Send Email, or Cancel to stop.`,
                     type: 'confirmation'
@@ -243,7 +265,7 @@ export const useAssistantStore = create((set, get) => ({
             case 'send_email':
                 // Ask for confirmation before sending
                 get().setPendingAction({ type: 'send_email' });
-                get().addMessage({
+                await addAndPersistMessage({
                     role: 'assistant',
                     content: 'I\'ve filled in the compose form. Please review it. If everything looks good, click on Send, or Cancel to stop.',
                     type: 'confirmation'
@@ -258,7 +280,7 @@ export const useAssistantStore = create((set, get) => ({
                 await mailStore.searchEmails(query.trim());
                 mailStore.setCurrentView('inbox');
 
-                get().addMessage({
+                await addAndPersistMessage({
                     role: 'assistant',
                     content: `Found ${mailStore.inbox.length} emails matching your search.`,
                     type: 'info'
@@ -280,7 +302,7 @@ export const useAssistantStore = create((set, get) => ({
                 await mailStore.fetchInbox(filters);
                 mailStore.setCurrentView('inbox');
 
-                get().addMessage({
+                await addAndPersistMessage({
                     role: 'assistant',
                     content: `Filtered inbox: showing ${useMailStore.getState().inbox.length} emails.`,
                     type: 'filter'
@@ -336,13 +358,13 @@ export const useAssistantStore = create((set, get) => ({
                 }
 
                 if (openSuccess) {
-                    get().addMessage({
+                    await addAndPersistMessage({
                         role: 'assistant',
                         content: 'Opening the email for you.',
                         type: 'info'
                     });
                 } else {
-                    get().addMessage({
+                    await addAndPersistMessage({
                         role: 'assistant',
                         content: "I couldn't find that email. Could you be more specific?",
                         type: 'error'
@@ -356,7 +378,7 @@ export const useAssistantStore = create((set, get) => ({
                 if (args.view === 'inbox') await mailStore.fetchInbox();
                 if (args.view === 'sent') await mailStore.fetchSent();
 
-                get().addMessage({
+                await addAndPersistMessage({
                     role: 'assistant',
                     content: `Navigated to ${args.view}.`,
                     type: 'success'
@@ -381,7 +403,7 @@ export const useAssistantStore = create((set, get) => ({
 
                 get().setPendingAction({ type: 'send_email' });
 
-                get().addMessage({
+                await addAndPersistMessage({
                     role: 'assistant',
                     content: 'Reply draft ready. Please review it. If everything looks good, click on Send Email, or Cancel to stop.',
                     type: 'confirmation'
@@ -391,7 +413,7 @@ export const useAssistantStore = create((set, get) => ({
             case 'delete_email':
                 if (args.email_id) {
                     await mailStore.deleteEmail(args.email_id);
-                    get().addMessage({
+                    await addAndPersistMessage({
                         role: 'assistant',
                         content: 'Deleted the email.',
                         type: 'action'
@@ -406,7 +428,7 @@ export const useAssistantStore = create((set, get) => ({
                     } else {
                         mailStore.markAsUnread(args.email_id);
                     }
-                    get().addMessage({
+                    await addAndPersistMessage({
                         role: 'assistant',
                         content: `Marked email as ${args.is_read ? 'read' : 'unread'}.`,
                         type: 'action'
@@ -416,7 +438,7 @@ export const useAssistantStore = create((set, get) => ({
 
             case 'refresh_inbox':
                 await mailStore.fetchInbox();
-                get().addMessage({
+                await addAndPersistMessage({
                     role: 'assistant',
                     content: 'Inbox refreshed.',
                     type: 'action'
@@ -430,27 +452,40 @@ export const useAssistantStore = create((set, get) => ({
 
     // Confirm pending action
     confirmAction: async () => {
-        const { pendingAction } = get();
+        const { pendingAction, currentConversationId } = get();
         if (pendingAction?.type === 'send_email') {
             const mailStore = useMailStore.getState();
             await mailStore.sendEmail();
             get().clearPendingAction();
-            get().addMessage({
+
+            const message = {
                 role: 'assistant',
                 content: 'Email sent successfully!',
                 type: 'success'
-            });
+            };
+
+            get().addMessage(message);
+
+            if (currentConversationId) {
+                assistantApi.addMessageToConversation(currentConversationId, message).catch(console.error);
+            }
         }
     },
 
     // Cancel pending action
     cancelAction: () => {
         get().clearPendingAction();
-        get().addMessage({
+        const message = {
             role: 'assistant',
             content: 'Action cancelled.',
             type: 'info'
-        });
+        };
+        get().addMessage(message);
+
+        const { currentConversationId } = get();
+        if (currentConversationId) {
+            assistantApi.addMessageToConversation(currentConversationId, message).catch(console.error);
+        }
     },
 }));
 
